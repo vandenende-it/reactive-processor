@@ -1,16 +1,14 @@
-server:
-  port: 8081
-
 spring:
   cloud:
     function:
-      # Hier koppelen we de naam van je Kotlin-functie aan de stream
       definition: processTemperature
     stream:
       bindings:
         processTemperature-in-0:
-          destination: iot-temp # De naam van het topic uit de Docker-container
-          group: reactive-consumer-group
-    kafka:
-      binder:
-        brokers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+          destination: iot-temp
+          group: reactive-processor-group
+        processTemperature-out-0:
+          destination: dashboard-data  # Hierheen stuurt hij de DashboardMetric
+      kafka:
+        binder:
+          brokers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}

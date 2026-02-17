@@ -40,7 +40,14 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           env:
+            # Voor de algemene Kafka-clients
             - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "redpanda:9092"
+            # Voor de Spring Cloud Stream Binder (deze zag je in de logs misgaan)
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
+              value: "redpanda:9092"
+            # Voor de Spring Kafka Admin (die de topics aanmaakt)
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "redpanda:9092"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
