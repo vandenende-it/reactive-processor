@@ -17,6 +17,7 @@ spec:
       containers:
         - name: frontend
           image: vandenende/reactive-frontend:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
             - containerPort: 3001
