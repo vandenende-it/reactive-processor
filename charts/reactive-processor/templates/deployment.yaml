@@ -39,6 +39,9 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "redpanda:9092"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http

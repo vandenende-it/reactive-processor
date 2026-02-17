@@ -11,6 +11,6 @@ spring:
         processTemperature-in-0:
           destination: iot-temp # De naam van het topic uit de Docker-container
           group: reactive-consumer-group
-      kafka:
-        binder:
-          brokers: localhost:9092 # De verbinding naar je Redpanda container
+    kafka:
+      binder:
+        brokers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
