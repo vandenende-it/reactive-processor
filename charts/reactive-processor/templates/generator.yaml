@@ -24,16 +24,22 @@ spec:
               from kafka import KafkaProducer
               import time, json, random
 
-              # In K8s praten we tegen de service "redpanda" op poort 9092
-              p = KafkaProducer(bootstrap_servers="redpanda.vandenende-reactive.svc.cluster.local:9092")
-              print("Generator gestart in Kubernetes...")
+              producer = None
+              while not producer:
+                  try:
+                      # Probeer de korte servicenaam eerst, die is vaak het meest betrouwbaar
+                      producer = KafkaProducer(
+                          bootstrap_servers="redpanda.vandenende-reactive.svc.cluster.local:9092",
+                          request_timeout_ms=5000
+                      )
+                      print("Verbonden met Redpanda!")
+                  except Exception as e:
+                      print(f"Wachten op Redpanda... ({e})")
+                      time.sleep(2)
 
               while True:
-                  try:
-                      data = {"sensor_id": 1, "temp": round(random.uniform(15, 30), 2)}
-                      p.send("iot-temp", json.dumps(data).encode("utf-8"))
-                      print(f"Verzonden: {data}")
-                  except Exception as e:
-                      print(f"Fout bij verzenden: {e}")
+                  data = {"sensor_id": 1, "temp": round(random.uniform(15, 30), 2)}
+                  producer.send("iot-temp", json.dumps(data).encode("utf-8"))
+                  print(f"Verzonden: {data}")
                   time.sleep(1)
               '
