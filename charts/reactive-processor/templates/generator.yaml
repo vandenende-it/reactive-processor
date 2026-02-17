@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: data-generator
+  namespace: vandenende-reactive
 spec:
   replicas: 1
   selector:
@@ -22,10 +23,17 @@ spec:
               python -u -c '
               from kafka import KafkaProducer
               import time, json, random
-              p = KafkaProducer(bootstrap_servers="redpanda-0.redpanda.vandenende-reactive.svc.cluster.local:9092")
+
+              # In K8s praten we tegen de service "redpanda" op poort 9092
+              p = KafkaProducer(bootstrap_servers="redpanda.vandenende-reactive.svc.cluster.local:9092")
+              print("Generator gestart in Kubernetes...")
+
               while True:
-                  data = {"sensor_id": 1, "temp": round(random.uniform(15, 30), 2)}
-                  p.send("iot-temp", json.dumps(data).encode("utf-8"))
-                  print(f"Verzonden naar K8s Redpanda: {data}")
+                  try:
+                      data = {"sensor_id": 1, "temp": round(random.uniform(15, 30), 2)}
+                      p.send("iot-temp", json.dumps(data).encode("utf-8"))
+                      print(f"Verzonden: {data}")
+                  except Exception as e:
+                      print(f"Fout bij verzenden: {e}")
                   time.sleep(1)
               '
