@@ -13,23 +13,31 @@ const kafka = new Kafka({
 const consumer = kafka.consumer({ groupId: 'bff-ui-group' });
 
 async function startBFF() {
-    await consumer.connect();
-    await consumer.subscribe({ topic: 'dashboard-data' });
+    try {
+        console.log("🔄 Verbinding maken met Kafka...");
+        await consumer.connect();
+        await consumer.subscribe({ topic: 'dashboard-data', fromBeginning: false });
+        console.log("✅ Verbonden met Kafka");
 
-    await consumer.run({
-        eachMessage: async ({ message }) => {
-            if (message.value) {
-                // Hier komt de data binnen (later met Protobuf!)
-                const rawData = message.value.toString();
-                // Broadcast direct naar alle verbonden browsers
-                io.emit('metrics', JSON.parse(rawData));
-            }
-        },
-    });
+        await consumer.run({
+            eachMessage: async ({ message }) => {
+                if (message.value) {
+                    io.emit('metrics', JSON.parse(message.value.toString()));
+                }
+            },
+        });
+    } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error(`❌ Kafka fout: ${errorMessage}. Nieuwe poging over 5 seconden...`);
 
-    server.listen(3001, () => {
-        console.log('🚀 BFF draait op poort 3001 - Wachten op Kafka data...');
-    });
+        // Wacht 5 seconden en probeer het opnieuw
+        setTimeout(startBFF, 5000);
+    }
 }
 
+// Start de HTTP/WebSocket server los van de Kafka connectie
+server.listen(3001, () => {
+    console.log('🚀 BFF server luistert op poort 3001');
+    startBFF(); // Start de Kafka loop
+});
 startBFF().catch(console.error);
