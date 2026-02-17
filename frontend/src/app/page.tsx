@@ -41,10 +41,16 @@ export default function Dashboard() {
     return () => { socket.disconnect(); };
   }, []);
 
-  const chartData = {
-    labels: dataPoints.map((_, i) => i),
-    datasets: [{ label: 'Real-time Temperatuur', data: dataPoints, borderColor: 'rgb(75, 192, 192)' }]
-  };
+    const chartData = {
+        // Zorg dat er altijd minimaal 1 label is
+        labels: dataPoints.length > 0 ? dataPoints.map((_, i) => i) : [0],
+        datasets: [{
+            label: 'Real-time Temperatuur',
+            data: dataPoints.length > 0 ? dataPoints : [0],
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        }]
+    };
 
   return (
       <main className="p-10">
