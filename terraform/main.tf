@@ -62,9 +62,16 @@ resource "helm_release" "redpanda" {
       name  = "tuning.tune_aio_events"
       value = "false"
     },
-    # --- DEZE ZIJN NU CRUCIAAL ---
     {
       name  = "tls.enabled"
+      value = "false"
+    },
+    {
+      name  = "listeners.kafka.port"
+      value = "9092"
+    },
+    {
+      name  = "listeners.kafka.tls.enabled"
       value = "false"
     },
     {
