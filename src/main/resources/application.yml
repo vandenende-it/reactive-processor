@@ -1,0 +1,16 @@
+server:
+  port: 8081
+
+spring:
+  cloud:
+    function:
+      # Hier koppelen we de naam van je Kotlin-functie aan de stream
+      definition: processTemperature
+    stream:
+      bindings:
+        processTemperature-in-0:
+          destination: iot-temp # De naam van het topic uit de Docker-container
+          group: reactive-consumer-group
+      kafka:
+        binder:
+          brokers: localhost:9092 # De verbinding naar je Redpanda container

@@ -1,0 +1,58 @@
+services:
+  # De berichten-makelaar (de snelweg)
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: redpanda
+    command:
+      - redpanda start
+      - --overprovisioned
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --node-id 0
+      - --check=false
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+
+  # Console om te zien wat er gebeurt (optioneel maar handig)
+  console:
+    image: docker.redpanda.com/redpandadata/console:latest
+    container_name: redpanda-console
+    entrypoint: /bin/sh -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda:29092"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redpanda
+
+  # Een simpele 'data generator' die elke seconde een bericht stuurt
+  data-generator:
+    image: python:3.9-slim
+    container_name: data-generator
+    depends_on:
+      - redpanda
+    command:
+      - sh
+      - -c
+      - |
+        pip install kafka-python
+        python -u -c '
+        from kafka import KafkaProducer
+        import time, json, random
+        
+        p = KafkaProducer(bootstrap_servers="redpanda:29092")
+        print("Generator gestart...")
+        
+        while True:
+            data = {"sensor_id": 1, "temp": round(random.uniform(15, 30), 2)}
+            p.send("iot-temp", json.dumps(data).encode("utf-8"))
+            print(f"Verzonden: {data}")
+            time.sleep(1)
+        '
