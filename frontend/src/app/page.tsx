@@ -2,13 +2,37 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { Line } from 'react-chartjs-2';
-// ... Chart.js imports ...
+
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
+
+// Registreer alles wat we nodig hebben voor een line chart
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 export default function Dashboard() {
   const [dataPoints, setDataPoints] = useState<number[]>([]);
 
   useEffect(() => {
-    const socket = io('http://localhost:3001');
+      const socket = io("http://reactive.local", {
+          path: "/socket.io", // De Ingress stuurt dit pad door naar poort 3001
+          transports: ["websocket"]
+      });
 
     socket.on('metrics', (data) => {
       setDataPoints(prev => [...prev.slice(-20), data.temp]); // Houd laatste 20 punten
