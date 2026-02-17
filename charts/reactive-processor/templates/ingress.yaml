@@ -1,43 +1,27 @@
-{{- if .Values.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "reactive-processor.fullname" . }}
-  labels:
-    {{- include "reactive-processor.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+  name: reactive-ingress
+  namespace: vandenende-reactive
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  {{- with .Values.ingress.className }}
-  ingressClassName: {{ . }}
-  {{- end }}
-  {{- if .Values.ingress.tls }}
-  tls:
-    {{- range .Values.ingress.tls }}
-    - hosts:
-        {{- range .hosts }}
-        - {{ . | quote }}
-        {{- end }}
-      secretName: {{ .secretName }}
-    {{- end }}
-  {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: reactive.local  # De URL die we gaan gebruiken
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            {{- with .pathType }}
-            pathType: {{ . }}
-            {{- end }}
+          - path: /
+            pathType: Prefix
             backend:
               service:
-                name: {{ include "reactive-processor.fullname" $ }}
+                name: frontend
                 port:
-                  number: {{ $.Values.service.port }}
-          {{- end }}
-    {{- end }}
-{{- end }}
+                  number: 3000
+          - path: /socket.io  # Belangrijk: stuur WebSocket verkeer ook door!
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3001

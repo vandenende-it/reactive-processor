@@ -119,3 +119,15 @@ resource "kubernetes_manifest" "argocd_app" {
   }
   depends_on = [helm_release.argocd]
 }
+
+resource "helm_release" "ingress_nginx" {
+  name       = "ingress-nginx"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "kube-system" # Vaak in kube-system of een eigen namespace
+
+  set = [ {
+    name  = "controller.service.type"
+    value = "LoadBalancer" # Docker Desktop koppelt dit automatisch aan je localhost
+  } ]
+}
